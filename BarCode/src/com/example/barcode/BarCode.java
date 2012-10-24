@@ -58,7 +58,7 @@ public class BarCode extends Activity {
 					TextView tv = new TextView(this);
 					tv.setText(upc);
 					setContentView(tv);
-
+					Log.v("BARCODE",upc);
 				}
 			}
 			break;
