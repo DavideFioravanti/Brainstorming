@@ -1,25 +1,14 @@
 package com.example.barcode;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.Socket;
-import java.util.UUID;
-
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.ParcelUuid;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.TextView;
 
 public class BarCode extends Activity {
@@ -30,14 +19,41 @@ public class BarCode extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_bar_code); 
+		 
+		
+		Button btn = (Button) findViewById(R.id.button1);
+		btn.setOnClickListener(new OnClickListener(){
 
-		// SCANNER NEW
-		 IntentIntegrator_External integrator = new
-		 IntentIntegrator_External(BarCode.this);
-		 integrator.initiateScan();
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				
+				
+				Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+		    	//intent.setPackage("com.google.zxing.client.android");
+				intent.putExtra("SCAN_MODE", "ONE_D_MODE");//for Qr code, its "QR_CODE_MODE" instead of "PRODUCT_MODE"
+		    	startActivityForResult(intent, 0x0000c0de);
+				
+				
+				// SCANNER NEW
+				// IntentIntegrator_External integrator = new
+				// IntentIntegrator_External(BarCode.this);
+				// integrator.initiateScan();
 
-		// SCANNER OLD
-		// IntentIntegrator.initiateScan(this);
+
+				 
+				 
+				// SCANNER OLD
+				// IntentIntegrator.initiateScan(this);
+				
+				
+				
+			}
+			}
+			);
+		
+		
+		
 
 
 	}
@@ -55,9 +71,11 @@ public class BarCode extends Activity {
 					String upc = scanResult.getContents();
 
 					// put whatever you want to do with the code here
-					TextView tv = new TextView(this);
-					tv.setText(upc);
-					setContentView(tv);
+					TextView tv0 = (TextView) findViewById(R.id.HelloWorld);
+					tv0.setText(upc);
+					//TextView tv = new TextView(this);
+					//tv.setText(upc);
+					//setContentView(tv);
 					Log.v("BARCODE",upc);
 				}
 			}

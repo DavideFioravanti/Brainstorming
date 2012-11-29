@@ -228,7 +228,8 @@ public class IntentIntegrator_External {
    * Initiates a scan for all known barcode types.
    */
   public AlertDialog initiateScan() {
-    return initiateScan(ALL_CODE_TYPES);
+    //return initiateScan(ALL_CODE_TYPES);
+	  return initiateScan(ONE_D_CODE_TYPES);
   }
 
   /**

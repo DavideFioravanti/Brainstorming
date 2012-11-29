@@ -15,7 +15,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".BarCode"
-            android:label="@string/title_activity_bar_code" >
+            android:label="@string/title_activity_bar_code"
+            android:configChanges="orientation" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
