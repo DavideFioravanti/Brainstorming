@@ -5,6 +5,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
@@ -15,6 +17,7 @@ import java.util.Enumeration;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,7 +38,12 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+		try {
+			socket = new DatagramSocket(9742);
+		} catch (SocketException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		TextView txt_ip = (TextView) findViewById(R.id.textView2);
 		
@@ -113,6 +121,12 @@ public class MainActivity extends Activity {
 						}
 					};
 				}
+				if (socket!=null) {
+					if (socket.isConnected()){
+			    		
+			    		socket.close();
+					};
+				}
 				
 			}
 		});
@@ -142,6 +156,45 @@ public class MainActivity extends Activity {
 		 
 		 
 
+		 Button btnautojoin = (Button)findViewById(R.id.btnautojoin);
+		 btnautojoin.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if (s==null) {
+					
+			    		
+			    		
+			    			startAutoJoin();
+					
+					
+				}
+				
+			}
+		});
+		 
+		 
+		 Button btnautohost = (Button)findViewById(R.id.btnautohost);
+		 btnautohost.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if (s==null) {
+					
+			    		
+			    		
+					startAutoHost();
+					
+					
+				}
+				
+			}
+		});
+		 
+		 
+		 
 		 
 	}
 
@@ -161,6 +214,136 @@ public class MainActivity extends Activity {
 	static EditText et;
 	static  EditText et2;
 	static  EditText et3; 
+	static DatagramSocket socket;
+	static String received="";
+	static DatagramPacket packet;
+	
+	public void startAutoHost(){
+		Runnable runnable = new Runnable(){
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				
+				try {
+					
+					
+					
+				
+					 
+					byte[] buf = new byte[1024];
+					 packet = new DatagramPacket(buf, buf.length);
+					do  {
+ 						socket.receive(packet);
+						received = new String(packet.getData(), 0, packet.getLength());
+	    
+					}
+					while (!received.equals("Cerco un Host!"));
+					InetAddress IPAddress = packet.getAddress();
+	                  int port = packet.getPort();
+	                  
+	                  byte[] sendData = "Mi hai trovato! :D".getBytes();
+	                  DatagramPacket sendPacket =
+	                  new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                 
+	                  socket.send(sendPacket);
+	                  
+	                  
+						hand.post(new Runnable() {
+							
+							@Override
+							public void run() {
+								// TODO Auto-generated method stub
+								
+								startServer();
+								
+								//System.out.println("CAMBIATO");
+							}
+						});
+	                  
+	                  
+	                  
+		
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				
+			}
+			
+		}; new Thread(runnable).start();
+	}
+	
+	
+	
+	public void startAutoJoin(){
+		Runnable runnable = new Runnable(){
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				
+				try {
+					
+					do  {
+					socket.setBroadcast(true);
+					String data = "Cerco un Host!";
+					packet = new DatagramPacket(data.getBytes(),
+							data.length(), getBroadcastAddress(), 9742);
+					socket.send(packet);
+					
+
+					byte[] buf = new byte[1024];
+					packet = new DatagramPacket(buf, buf.length);
+					System.out.println("TIMEOUT");
+					hand.post(new Runnable() {
+						
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							et.append("TIMEOUT");
+							//startClient();
+							
+							//System.out.println("CAMBIATO");
+						}
+					});
+						//socket.setSoTimeout(10000);
+						
+							 
+						
+						socket.receive(packet);
+	 					received = new String(packet.getData(), 0, packet.getLength());
+						Thread.sleep(1000);
+					}  
+					while (!received.equals("Mi hai trovato! :D"));
+					
+					hand.post(new Runnable() {
+						
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							et2.setText(packet.getSocketAddress().toString().split("/")[1].split(":")[0]);
+							startClient();
+							
+							//System.out.println("CAMBIATO");
+						}
+					});
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				
+ 			}
+			
+		}; new Thread(runnable).start();
+	}
 	
 	
 	
@@ -371,6 +554,7 @@ public void startClient() {
 		// TODO Auto-generated method stub
 		try {
 			s.close();
+			socket.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -422,4 +606,24 @@ public void startClient() {
 	    return null;
 	}
 
+	
+	
+	
+	
+	InetAddress getBroadcastAddress() throws IOException {
+		WifiManager myWifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+		DhcpInfo myDhcpInfo = myWifiManager.getDhcpInfo();
+		if (myDhcpInfo == null) {
+			System.out.println("Could not get broadcast address");
+			return null;
+		}
+		int broadcast = (myDhcpInfo.ipAddress & myDhcpInfo.netmask)
+				| ~myDhcpInfo.netmask;
+		byte[] quads = new byte[4];
+		for (int k = 0; k < 4; k++)
+			quads[k] = (byte) ((broadcast >> k * 8) & 0xFF);
+		System.out.println(InetAddress.getByAddress(quads).toString());
+		return InetAddress.getByAddress(quads);
+	}
+	
 }
